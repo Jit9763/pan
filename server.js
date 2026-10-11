@@ -18,6 +18,11 @@ const JSON_PATH = path.join(__dirname, 'portal_users.json');
 
 // Initialize SQLite Database
 const db = new DatabaseSync(DB_PATH);
+try {
+  db.exec('PRAGMA journal_mode = WAL;');
+  db.exec('PRAGMA busy_timeout = 10000;');
+  db.exec('PRAGMA synchronous = NORMAL;');
+} catch(e) {}
 
 // Create Tables
 db.exec(`
@@ -66,6 +71,7 @@ function seedDatabase() {
     try {
       const data = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
       const userList = Array.isArray(data) ? data : (data.users || []);
+      try { db.exec('BEGIN TRANSACTION;'); } catch(_) {}
       const insertUser = db.prepare(`
         INSERT OR REPLACE INTO users (id, username, password, full_name, mobile, role, status, allowed_panchayats, allowed_wards, allowed_tabs, candidate_mode, can_print, can_download, can_search, can_view, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -122,6 +128,7 @@ function seedDatabase() {
           );
         });
       }
+      try { db.exec('COMMIT;'); } catch(_) {}
       console.log('Database synced with portal_users.json. Users count in DB:', db.prepare('SELECT COUNT(*) AS c FROM users').get().c);
     } catch (e) {
       console.error('Seeding error:', e);
@@ -256,32 +263,52 @@ function executeGithubPush(reason = 'update', callback = null) {
   }
   isPushing = true;
   const { exec } = require('node:child_process');
-  let deployScript = path.join(path.dirname(__dirname), 'deploy_tri_portals.py');
-  if (!fs.existsSync(deployScript)) {
-    deployScript = path.join(__dirname, 'deploy_tri_portals.py');
-  }
-  if (!fs.existsSync(deployScript)) {
-    deployScript = 'C:\\Users\\jiten\\Desktop\\panchayat chunav\\deploy_tri_portals.py';
-  }
-  if (!fs.existsSync(deployScript)) {
-    deployScript = 'C:\\Users\\jiten\\Desktop\\panchyt order\\deploy_tri_portals.py';
-  }
-  console.log(`[AUTO-SYNC] [${new Date().toLocaleTimeString('en-IN')}] Running deployment script (Reason: ${reason}): python "${deployScript}" ...`);
-  exec(`python "${deployScript}"`, { cwd: path.dirname(deployScript) }, (error, stdout, stderr) => {
-    isPushing = false;
-    if (error) {
-      console.error('[AUTO-SYNC] Push failed:', error.message);
-      if (stderr) console.error(stderr);
-      if (callback) callback(error);
-    } else {
-      console.log('[AUTO-SYNC] Push SUCCESS! All 3 repositories live on GitHub (pan, blo-portal, voter-portal).');
-      if (stdout) {
-        const lines = stdout.trim().split('\n').filter(l => l.includes('DEPLOYING') || l.includes('FINISHED') || l.includes('->'));
-        lines.forEach(l => console.log('   ' + l.trim()));
+
+  const runDirectGitPush = () => {
+    console.log(`[AUTO-SYNC] Running clash-free Git push for repo "pan" (Reason: ${reason})...`);
+    const pcName = process.env.COMPUTERNAME || 'PC';
+    const gitPath = 'C:\\Users\\jiten\\AppData\\Local\\GitHubDesktop\\app-3.6.7\\resources\\app\\git\\cmd';
+    const commitMsg = `Auto-update settings from ${pcName} (${reason}) [${new Date().toISOString()}]`;
+    const gitCmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
+
+    exec(gitCmd, { cwd: __dirname }, (gErr, gStdout, gStderr) => {
+      isPushing = false;
+      if (gErr) {
+        if ((gStderr && gStderr.includes('nothing to commit')) || (gStdout && gStdout.includes('nothing to commit'))) {
+          console.log('[AUTO-SYNC] Settings already in sync with GitHub.');
+          if (callback) callback(null, 'Already in sync');
+          return;
+        }
+        console.error('[AUTO-SYNC] Git Push failed:', gErr.message);
+        if (gStderr) console.error(gStderr);
+        if (callback) callback(gErr);
+      } else {
+        console.log('[AUTO-SYNC] Push SUCCESS! Changes are LIVE on GitHub repo "pan".');
+        if (callback) callback(null, gStdout || 'Pushed successfully');
       }
-      if (callback) callback(null, stdout);
-    }
-  });
+    });
+  };
+
+  let deployScript = path.join(path.dirname(__dirname), 'deploy_tri_portals.py');
+  if (!fs.existsSync(deployScript)) deployScript = path.join(__dirname, 'deploy_tri_portals.py');
+  if (!fs.existsSync(deployScript)) deployScript = 'C:\\Users\\jiten\\Desktop\\panchayat chunav\\deploy_tri_portals.py';
+  if (!fs.existsSync(deployScript)) deployScript = 'C:\\Users\\jiten\\Desktop\\panchyt order\\deploy_tri_portals.py';
+
+  if (fs.existsSync(deployScript)) {
+    console.log(`[AUTO-SYNC] Running deployment script: python "${deployScript}" ...`);
+    exec(`python "${deployScript}"`, { cwd: path.dirname(deployScript) }, (error, stdout, stderr) => {
+      if (error) {
+        console.warn('[AUTO-SYNC] Python deploy failed. Falling back to direct Git push...');
+        runDirectGitPush();
+      } else {
+        isPushing = false;
+        console.log('[AUTO-SYNC] Push SUCCESS via deploy script!');
+        if (callback) callback(null, stdout);
+      }
+    });
+  } else {
+    runDirectGitPush();
+  }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -393,7 +420,8 @@ const server = http.createServer(async (req, res) => {
     // Fetch Remote Settings from GitHub Endpoint
     if (pathname === '/api/fetch-remote-settings' && req.method === 'POST') {
       const { exec } = require('node:child_process');
-      exec('git fetch origin main && git merge origin/main --no-edit -m "merge: auto sync remote"', { cwd: __dirname }, (error, stdout, stderr) => {
+      const gitBin = 'C:\\Users\\jiten\\AppData\\Local\\GitHubDesktop\\app-3.6.7\\resources\\app\\git\\cmd\\git.exe';
+      exec(`"${gitBin}" fetch origin main && "${gitBin}" pull --rebase origin main`, { cwd: __dirname }, (error, stdout, stderr) => {
         try {
           seedDatabase();
           res.end(JSON.stringify({ 
