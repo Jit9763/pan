@@ -264,28 +264,58 @@ function executeGithubPush(reason = 'update', callback = null) {
   isPushing = true;
   const { exec } = require('node:child_process');
 
-  const runDirectGitPush = () => {
-    console.log(`[AUTO-SYNC] Running clash-free Git push for repo "pan" (Reason: ${reason})...`);
+    const runDirectGitPush = () => {
+    console.log(`[AUTO-SYNC] Running Tri-Repo clash-free Git push (pan, blo-portal, voter-portal) (Reason: ${reason})...`);
     const pcName = process.env.COMPUTERNAME || 'PC';
     const gitPath = 'C:\\Users\\jiten\\AppData\\Local\\GitHubDesktop\\app-3.6.7\\resources\\app\\git\\cmd';
-    const commitMsg = `Auto-update settings from ${pcName} (${reason}) [${new Date().toISOString()}]`;
-    const gitCmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
+    const commitMsg = `Auto-sync settings & users from ${pcName} (${reason}) [${new Date().toISOString()}]`;
 
-    exec(gitCmd, { cwd: __dirname }, (gErr, gStdout, gStderr) => {
-      isPushing = false;
-      if (gErr) {
-        if ((gStderr && gStderr.includes('nothing to commit')) || (gStdout && gStdout.includes('nothing to commit'))) {
-          console.log('[AUTO-SYNC] Settings already in sync with GitHub.');
-          if (callback) callback(null, 'Already in sync');
-          return;
-        }
-        console.error('[AUTO-SYNC] Git Push failed:', gErr.message);
-        if (gStderr) console.error(gStderr);
-        if (callback) callback(gErr);
-      } else {
-        console.log('[AUTO-SYNC] Push SUCCESS! Changes are LIVE on GitHub repo "pan".');
-        if (callback) callback(null, gStdout || 'Pushed successfully');
+    // Tri-Repo Paths
+    const otherRepos = [
+      'C:\\Users\\jiten\\Documents\\GitHub\\blo-portal',
+      'C:\\Users\\jiten\\Documents\\GitHub\\voter-portal'
+    ];
+
+    const syncFiles = ['portal_users.json', 'portal_settings.json', 'app.js'];
+
+    // 1. Copy updated files to blo-portal and voter-portal
+    otherRepos.forEach(rDir => {
+      if (fs.existsSync(rDir)) {
+        syncFiles.forEach(f => {
+          const s = path.join(__dirname, f);
+          const d = path.join(rDir, f);
+          if (fs.existsSync(s)) {
+            try { fs.copyFileSync(s, d); } catch(_) {}
+          }
+        });
       }
+    });
+
+    // 2. Commit and push on all 3 repositories without clash
+    const allRepos = [__dirname, ...otherRepos.filter(d => fs.existsSync(d))];
+    let completed = 0;
+
+    allRepos.forEach(rDir => {
+      const rName = path.basename(rDir);
+      const cmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json app.js && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
+      
+      exec(cmd, { cwd: rDir }, (gErr, gStdout, gStderr) => {
+        completed++;
+        if (gErr) {
+          if ((gStderr && gStderr.includes('nothing to commit')) || (gStdout && gStdout.includes('nothing to commit'))) {
+            console.log(`[AUTO-SYNC] ${rName} already in sync.`);
+          } else {
+            console.warn(`[AUTO-SYNC] Push notice for ${rName}:`, gErr.message);
+          }
+        } else {
+          console.log(`[AUTO-SYNC] Push SUCCESS! ${rName} is now LIVE on GitHub!`);
+        }
+
+        if (completed === allRepos.length) {
+          isPushing = false;
+          if (callback) callback(null, 'Tri-Repo sync complete');
+        }
+      });
     });
   };
 

@@ -341,7 +341,9 @@
       "allowed_panchayats": "ALL",
       "allowed_wards": "ALL",
       "allowed_tabs": [
-        "searchTab"
+        "searchTab",
+        "directoryTab",
+        "alphaTab"
       ],
       "candidate_mode": "user_edit",
       "created_at": "2026-10-11T13:16:42.291Z",
