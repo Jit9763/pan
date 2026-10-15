@@ -3639,6 +3639,11 @@ function openVoterSlipModal(voter) {
       
       const candsMap = (window.PORTAL_USERS_DATA && window.PORTAL_USERS_DATA.candidates) || {};
       const candsList = Object.keys(candsMap).map(k => ({ id: k, ...candsMap[k] }));
+      (State.adminControlUsers || []).forEach(u => {
+        if (u.candidate && !candsList.some(c => (c.id === u.id || c.id === u.username))) {
+          candsList.push({ id: u.id || u.username, ...u.candidate });
+        }
+      });
 
       // Add options
       let matchedCandId = null;
@@ -6284,6 +6289,16 @@ async function loadAdminUsersList(force = false) {
       const data = await res.json();
       if (data && data.success && Array.isArray(data.users)) {
         State.adminControlUsers = data.users.map(sanitizeUserTabs);
+        if (!window.PORTAL_USERS_DATA) window.PORTAL_USERS_DATA = { users: [], candidates: {} };
+        window.PORTAL_USERS_DATA.users = State.adminControlUsers;
+        if (!window.PORTAL_USERS_DATA.candidates) window.PORTAL_USERS_DATA.candidates = {};
+        if (data.candidates) Object.assign(window.PORTAL_USERS_DATA.candidates, data.candidates);
+        State.adminControlUsers.forEach(u => {
+          if (u.candidate) {
+            if (u.id) window.PORTAL_USERS_DATA.candidates[u.id] = u.candidate;
+            if (u.username) window.PORTAL_USERS_DATA.candidates[u.username] = u.candidate;
+          }
+        });
         syncCurrentUserWithConfiguredUsers();
         return;
       }
@@ -6303,10 +6318,18 @@ async function loadAdminUsersList(force = false) {
     if (jsonRes.ok) {
       const data = await jsonRes.json();
       if (data && Array.isArray(data.users)) {
+        window.PORTAL_USERS_DATA = data;
+        if (!window.PORTAL_USERS_DATA.candidates) window.PORTAL_USERS_DATA.candidates = {};
         State.adminControlUsers = data.users.map(u => ({
           ...sanitizeUserTabs(u),
-          candidate: (data.candidates && data.candidates[u.id || u.username]) || null
+          candidate: (data.candidates && (data.candidates[u.id] || data.candidates[u.username])) || null
         }));
+        State.adminControlUsers.forEach(u => {
+          if (u.candidate) {
+            if (u.id) window.PORTAL_USERS_DATA.candidates[u.id] = u.candidate;
+            if (u.username) window.PORTAL_USERS_DATA.candidates[u.username] = u.candidate;
+          }
+        });
         syncCurrentUserWithConfiguredUsers();
         return;
       }
@@ -7202,10 +7225,11 @@ async function handleAdminSaveCandidate(event) {
   }
 
   // 2. Update in window.PORTAL_USERS_DATA.candidates
-  if (window.PORTAL_USERS_DATA) {
-    if (!window.PORTAL_USERS_DATA.candidates) window.PORTAL_USERS_DATA.candidates = {};
-    window.PORTAL_USERS_DATA.candidates[userId] = candData;
-  }
+  if (!window.PORTAL_USERS_DATA) window.PORTAL_USERS_DATA = { users: [], candidates: {} };
+  if (!window.PORTAL_USERS_DATA.candidates) window.PORTAL_USERS_DATA.candidates = {};
+  window.PORTAL_USERS_DATA.candidates[userId] = candData;
+  if (u && u.username) window.PORTAL_USERS_DATA.candidates[u.username] = candData;
+  if (u && u.id) window.PORTAL_USERS_DATA.candidates[u.id] = candData;
 
   // 3. Save to localStorage
   try {
@@ -8189,13 +8213,24 @@ async function handleGatekeeperLogin(event) {
 
       // Initialize candidate profile
       let candProfile = candMatch.candidate;
+      if (!candProfile && window.PORTAL_USERS_DATA && window.PORTAL_USERS_DATA.candidates) {
+        candProfile = window.PORTAL_USERS_DATA.candidates[candUser.id] || window.PORTAL_USERS_DATA.candidates[candUser.username];
+      }
+      if (!candProfile) {
+        try {
+          const res = await fetch('/api/candidate/' + encodeURIComponent(candUser.id || candUser.username));
+          if (res.ok) {
+            const d = await res.json();
+            if (d && d.candidate && d.candidate.candidate_name) {
+              candProfile = d.candidate;
+            }
+          }
+        } catch(e) {}
+      }
       if (!candProfile) {
         try {
           candProfile = JSON.parse(localStorage.getItem('candidate_profile_' + candUser.id) || localStorage.getItem('candidate_profile_' + candUser.username) || 'null');
         } catch(e) {}
-      }
-      if (!candProfile && window.PORTAL_USERS_DATA && window.PORTAL_USERS_DATA.candidates) {
-        candProfile = window.PORTAL_USERS_DATA.candidates[candUser.id] || window.PORTAL_USERS_DATA.candidates[candUser.username];
       }
       if (!candProfile) {
         candProfile = {
