@@ -59,6 +59,8 @@ db.exec(`
   );
 `);
 try { db.prepare("ALTER TABLE candidates ADD COLUMN election_time TEXT").run(); } catch(e) {}
+try { db.prepare("ALTER TABLE candidates ADD COLUMN election_date TEXT").run(); } catch(e) {}
+try { db.prepare("ALTER TABLE candidates ADD COLUMN custom_symbol_url TEXT").run(); } catch(e) {}
 try { db.prepare("ALTER TABLE users ADD COLUMN can_print INTEGER DEFAULT 1").run(); } catch(e) {}
 try { db.prepare("ALTER TABLE users ADD COLUMN can_download INTEGER DEFAULT 1").run(); } catch(e) {}
 try { db.prepare("ALTER TABLE users ADD COLUMN can_search INTEGER DEFAULT 1").run(); } catch(e) {}
@@ -166,11 +168,14 @@ function exportToJson() {
         post: c.post,
         panchayat: c.panchayat,
         ward: c.ward,
+        election_date: c.election_date || '15 अक्टूबर 2026',
+        election_time: c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
         symbol_name: c.symbol_name,
         symbol_icon: c.symbol_icon,
-        photo_url: c.photo_url,
-        slogan: c.slogan,
-        mobile: c.mobile,
+        custom_symbol_url: c.custom_symbol_url || '',
+        photo_url: c.photo_url || '',
+        slogan: c.slogan || '',
+        mobile: c.mobile || '',
         show_banner_on_slip: !!c.show_banner_on_slip,
         updated_at: c.updated_at
       };
@@ -847,7 +852,7 @@ const server = http.createServer(async (req, res) => {
             db.prepare(`
               UPDATE candidates SET
                 candidate_name = ?, post = ?, panchayat = ?, ward = ?, symbol_name = ?, symbol_icon = ?,
-                photo_url = ?, slogan = ?, election_time = ?, mobile = ?, show_banner_on_slip = ?, updated_at = ?
+                custom_symbol_url = ?, photo_url = ?, slogan = ?, election_date = ?, election_time = ?, mobile = ?, show_banner_on_slip = ?, updated_at = ?
               WHERE user_id = ?
             `).run(
               c.candidate_name || '',
@@ -856,8 +861,10 @@ const server = http.createServer(async (req, res) => {
               c.ward || '',
               c.symbol_name || 'उगता सूरज',
               c.symbol_icon || 'sun',
+              c.custom_symbol_url || '',
               c.photo_url || '',
               c.slogan || '',
+              c.election_date || '15 अक्टूबर 2026',
               c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
               c.mobile || '',
               c.show_banner_on_slip ? 1 : 0,
@@ -866,8 +873,8 @@ const server = http.createServer(async (req, res) => {
             );
           } else {
             db.prepare(`
-              INSERT INTO candidates (user_id, candidate_name, post, panchayat, ward, symbol_name, symbol_icon, photo_url, slogan, election_time, mobile, show_banner_on_slip, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              INSERT INTO candidates (user_id, candidate_name, post, panchayat, ward, symbol_name, symbol_icon, custom_symbol_url, photo_url, slogan, election_date, election_time, mobile, show_banner_on_slip, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
               uId,
               c.candidate_name || '',
@@ -876,8 +883,10 @@ const server = http.createServer(async (req, res) => {
               c.ward || '',
               c.symbol_name || 'उगता सूरज',
               c.symbol_icon || 'sun',
+              c.custom_symbol_url || '',
               c.photo_url || '',
               c.slogan || '',
+              c.election_date || '15 अक्टूबर 2026',
               c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
               c.mobile || '',
               c.show_banner_on_slip ? 1 : 0,
