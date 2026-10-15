@@ -1347,6 +1347,23 @@
       </div>
 
       <div class="modal-body">
+        <!-- TOOLBAR: TOGGLE OFFICIAL VS CANDIDATE SLIP + SUPERADMIN CANDIDATE SELECTOR -->
+        <div id="voterSlipModalToolbar" class="no-print" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding:8px 12px; background:#f1f5f9; border-radius:6px; border:1px solid #cbd5e1;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.8rem; font-weight:700; color:#1e293b;">पर्ची प्रारूप (Slip Format):</span>
+            <div class="btn-group btn-group-sm">
+              <button type="button" id="btnSlipModeOfficial" class="btn btn-xs btn-outline-primary" onclick="setSlipModalViewMode('official')" style="font-weight:700; padding:3px 10px;">📋 आधिकारिक पर्ची (Official)</button>
+              <button type="button" id="btnSlipModeCandidate" class="btn btn-xs btn-outline-primary active" onclick="setSlipModalViewMode('candidate')" style="font-weight:700; padding:3px 10px;">🗳️ प्रत्याशी प्रचार पर्ची (Candidate)</button>
+            </div>
+          </div>
+          <div id="superadminCandidatePickerWrap" style="display:none; align-items:center; gap:6px;">
+            <span style="font-size:0.75rem; font-weight:700; color:#475569;">प्रत्याशी चुनें:</span>
+            <select id="superadminCandidatePicker" class="form-select form-select-sm" onchange="onSuperadminCandidatePickerChanged(this.value)" style="font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:4px; max-width:240px;">
+              <!-- Populated dynamically with candidates -->
+            </select>
+          </div>
+        </div>
+
         <!-- THE ACTUAL PRINTABLE VOTER SLIP -->
         <div id="printableVoterSlip" class="official-voter-slip">
           <!-- Top Header -->
@@ -1621,23 +1638,60 @@
           </div>
         </div>
 
-        <!-- ELECTION SYMBOL SELECTION & PREVIEW -->
+        <!-- ELECTION SYMBOL SELECTION & PREVIEW (SUPERADMIN FULL CONTROL: STANDARD + CUSTOM) -->
         <div class="card p-3 mt-3" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
             <label class="mb-0" style="font-weight:700; color:#1e293b;">🗳️ चुनाव चिन्ह (Election Symbol) *:</label>
-            <div id="adminCandSymbolBadge" style="display:flex; align-items:center; gap:6px; background:#eff6ff; padding:3px 8px; border-radius:6px; border:1px solid #bfdbfe;">
-              <span id="adminCandSymbolPreviewSvg" style="display:inline-flex; width:22px; height:22px;"></span>
+            <div id="adminCandSymbolBadge" style="display:flex; align-items:center; gap:6px; background:#eff6ff; padding:4px 10px; border-radius:6px; border:1.5px solid #3b82f6;">
+              <span id="adminCandSymbolPreviewSvg" style="display:inline-flex; width:26px; height:26px; align-items:center; justify-content:center;"></span>
               <span id="adminCandSymbolPreviewName" style="font-weight:800; font-size:0.85rem; color:#1e40af;">उगता सूरज</span>
             </div>
           </div>
-          <div class="row-2col">
-            <div class="form-group">
+
+          <!-- Mode Toggle: Standard vs Custom Symbol -->
+          <div class="d-flex gap-2 mb-2">
+            <button type="button" id="adminBtnSymbolStandard" class="btn btn-xs btn-outline-primary active" onclick="setAdminSymbolMode('standard')" style="font-weight:700;">
+              ⚡ 50+ अधिकृत चिन्ह (Standard)
+            </button>
+            <button type="button" id="adminBtnSymbolCustom" class="btn btn-xs btn-outline-primary" onclick="setAdminSymbolMode('custom')" style="font-weight:700;">
+              📁 कस्टम चुनाव चिन्ह (Custom Symbol)
+            </button>
+          </div>
+
+          <!-- Standard Symbol Section -->
+          <div id="adminStandardSymbolSection">
+            <div class="form-group mb-0">
               <select id="adminCandSymbol" class="form-select" style="font-weight:700;" onchange="onAdminCandSymbolChanged()">
-                <!-- Populated dynamically -->
+                <!-- Populated dynamically with official symbols -->
               </select>
             </div>
-            <div class="form-group">
-              <input type="text" id="adminCandCustomSymbol" class="form-input" placeholder="या अन्य चुनाव चिन्ह का नाम लिखें" oninput="onAdminCandCustomSymbolInput(this.value)">
+          </div>
+
+          <!-- Custom Symbol Section -->
+          <div id="adminCustomSymbolSection" style="display:none;">
+            <input type="hidden" id="adminCandCustomSymbolUrl">
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+              <!-- Thumbnail Box -->
+              <div id="adminCandCustomSymbolPreviewBox" style="width:52px; height:52px; border:1.5px dashed #3b82f6; border-radius:6px; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#ffffff; flex-shrink:0;">
+                <img id="adminCandCustomSymbolPreviewImg" src="" alt="Custom Symbol" style="max-width:100%; max-height:100%; object-fit:contain; display:none;">
+                <span id="adminCandCustomSymbolPlaceholder" style="font-size:0.65rem; color:#94a3b8; text-align:center;">चिन्ह नहीं</span>
+              </div>
+              <div class="flex-1" style="min-width:200px;">
+                <div class="d-flex gap-2 align-items-center mb-1">
+                  <label for="adminCandCustomSymbolFile" class="btn btn-xs btn-primary" style="cursor:pointer; font-weight:700;">
+                    📁 कस्टम चिन्ह फाइल चुनें (PNG/JPG)
+                  </label>
+                  <input type="file" id="adminCandCustomSymbolFile" accept="image/*" style="display:none;" onchange="handleAdminCandCustomSymbolFile(event)">
+                  <button type="button" id="adminCandCustomSymbolRemoveBtn" class="btn btn-xs btn-outline-danger" onclick="clearAdminCandCustomSymbol()" style="display:none;">
+                    🗑️ हटाएं
+                  </button>
+                </div>
+                <small class="text-muted" style="font-size:0.7rem; display:block;">पारदर्शी PNG या JPG फाइल अपलोड करें (स्वचालित कंप्रेस होगी)</small>
+              </div>
+            </div>
+            <div class="form-group mb-0">
+              <label for="adminCandCustomSymbolName" style="font-size:0.75rem; font-weight:700; color:#334155; margin-bottom:2px; display:block;">कस्टम चुनाव चिन्ह का नाम *:</label>
+              <input type="text" id="adminCandCustomSymbolName" class="form-input form-input-sm" placeholder="उदा. शेर, ट्रैक्टर, बल्ला, तराजू" oninput="onAdminCandCustomSymbolNameInput(this.value)" style="font-weight:700;">
             </div>
           </div>
         </div>
