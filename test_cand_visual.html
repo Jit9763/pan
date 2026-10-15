@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Candidate Slips - Beautiful Balanced Layout</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body { background: #cbd5e1; padding: 15px; margin: 0; font-family: sans-serif; }
+  .page { width: 210mm; background: #fff; margin: 0 auto; padding: 5mm; box-sizing: border-box; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; height: 350px; }
+  
+  .candidate-slip-card {
+    border: 1.5px solid #000;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .candidate-banner-top {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: #fffdf5;
+    box-sizing: border-box;
+  }
+
+  .candidate-banner-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start !important;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .candidate-banner-photo-col {
+    width: 56px;
+    height: 62px;
+    min-width: 56px;
+    min-height: 62px;
+    border: 2px solid #b45309;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #1e293b;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .candidate-banner-photo-col img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .candidate-banner-info-col {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    height: 62px;
+    padding: 0 2px;
+  }
+
+  .candidate-banner-header {
+    font-size: 5.4pt;
+    color: #b45309;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .candidate-banner-name {
+    font-size: 11.5pt;
+    font-weight: 900;
+    color: #b91c1c;
+    line-height: 1.1;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .candidate-banner-post {
+    display: inline-block;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 6.8pt;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+  }
+
+  .candidate-banner-symbol-col {
+    width: 56px;
+    min-width: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .candidate-symbol-box {
+    width: 56px;
+    height: 62px;
+    min-width: 56px;
+    min-height: 62px;
+    border: 2px solid #b45309;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .candidate-symbol-box svg,
+  .candidate-symbol-box img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+    transform: scale(1.08);
+  }
+
+  .candidate-banner-symbol-label {
+    font-size: 5.6pt;
+    font-weight: 800;
+    color: #9a3412;
+    text-align: center;
+    margin-top: 1px;
+    line-height: 1.05;
+    max-width: 56px;
+    word-break: break-word;
+  }
+
+  .candidate-banner-gp {
+    font-size: 6.2pt;
+    font-weight: 700;
+    color: #1e3a8a;
+    text-align: center;
+    white-space: nowrap;
+    margin-top: 2px;
+    line-height: 1.2;
+  }
+
+  .candidate-banner-time {
+    font-size: 5.4pt;
+    font-weight: 700;
+    color: #047857;
+    text-align: center;
+    white-space: nowrap;
+    margin-top: 1px;
+    line-height: 1.15;
+  }
+
+  .candidate-banner-slogan {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 6.8pt;
+    font-weight: 800;
+    color: #b91c1c;
+    line-height: 1.25;
+    text-align: center;
+    background: #fffbeb;
+    border: 1px dashed #f59e0b;
+    border-radius: 3px;
+    padding: 2.5px 4px;
+    margin-top: 2px;
+    white-space: normal;
+  }
+
+  .slip-perforation-divider {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 1.5px 0;
+    border-top: 1px dashed #475569;
+    border-bottom: 1px dashed #475569;
+    font-size: 5.4pt;
+    font-weight: 800;
+    color: #b91c1c;
+    background: #fff;
+  }
+  
+  .official-bottom-bw-slip {
+    flex: 0 0 auto;
+    padding: 3px 6px;
+    font-size: 6.2pt;
+    background: #fff;
+  }
+</style>
+</head>
+<body class="layout-9">
+<div class="page">
+  <div class="grid">
+
+    <!-- SLIP 1 -->
+    <div class="candidate-slip-card">
+      <div class="candidate-banner-top">
+        <div class="candidate-banner-main-row">
+          <div class="candidate-banner-photo-col">
+            <div style="width:100%; height:100%; background:#1e293b; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:6pt;">फोटो</div>
+          </div>
+          <div class="candidate-banner-info-col">
+            <div class="candidate-banner-header">।। श्री गणेशाय नमः ।।</div>
+            <div class="candidate-banner-name">श्री रामेश्वर जाट</div>
+            <div><span class="candidate-banner-post">सरपंच प्रत्याशी</span></div>
+          </div>
+          <div class="candidate-banner-symbol-col">
+            <div class="candidate-symbol-box">
+              <svg viewBox="0 0 100 100"><polygon points="50,10 88,48 50,86 12,48" fill="#dc2626" stroke="#991b1b" stroke-width="3"/><line x1="50" y1="10" x2="50" y2="86" stroke="#ffffff" stroke-width="2.5"/><path d="M12,48 Q50,75 88,48" fill="none" stroke="#ffffff" stroke-width="2.5"/><polygon points="50,86 42,96 58,96" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/></svg>
+            </div>
+            <div class="candidate-banner-symbol-label">चुनाव चिन्ह:<br><strong>पतंग (Kite)</strong></div>
+          </div>
+        </div>
+        <div class="candidate-banner-gp">ग्राम पंचायत: <strong>बूबकिया</strong> • वार्ड नं.: <strong>3</strong></div>
+        <div class="candidate-banner-time">🗓️ मतदान: <strong>15 अक्टूबर 2026</strong> | ⏰ समय: <strong>प्रातः 7:00 से 5:00 बजे तक</strong></div>
+        <div class="candidate-banner-slogan">
+          ।। समस्त ग्रामवासियों से विनम्र अपील ।।<br>अपने कर्मठ, ईमानदार एवं सेवाभावी प्रत्याशी को भारी मतों से विजयी बनावें।
+        </div>
+      </div>
+      <div class="slip-perforation-divider">
+        <span>✂️</span> <span>- - काटकर मतदाता को दें (काट कर अलग करें) - -</span> <span>✂️</span>
+      </div>
+      <div class="official-bottom-bw-slip">
+        <div class="bw-header">
+          <div class="bw-title-line"><span class="bw-title-bold">मतदाता सूचना पर्ची (VOTER SLIP)</span><span class="bw-serial-badge">सरल क्र. 1</span></div>
+          <div class="bw-sub-line">पंचायती राज चुनाव 2026 | पं.स. भिनाय (अजमेर)</div>
+        </div>
+        <div class="bw-grid">
+          <div class="bw-row"><div class="bw-cell"><strong>पं.:</strong> बूबकिया</div><div class="bw-cell"><strong>वार्ड संख्या:</strong> 1</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>मतदाता का नाम:</strong> महावी‍र सिंह रावत (Mahaveer Singh Rawat)</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पिता का नाम:</strong> गंगा राम रावत</div></div>
+          <div class="bw-row"><div class="bw-cell"><strong>आयु/लिंग:</strong> 25 वर्ष, पुरुष</div><div class="bw-cell"><strong>मकान संख्या:</strong> 79</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पहचान पत्र क्र. (EPIC):</strong> WAN1771724</div></div>
+        </div>
+        <div class="bw-booth-box"><strong>मतदान केंद्र 26:</strong> राजकीय उच्च माध्यमिक विद्यालय कमरा नम्बर:-7 बूबकिया</div>
+      </div>
+    </div>
+
+    <!-- SLIP 2 -->
+    <div class="candidate-slip-card">
+      <div class="candidate-banner-top">
+        <div class="candidate-banner-main-row">
+          <div class="candidate-banner-photo-col">
+            <div style="width:100%; height:100%; background:#1e293b; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:6pt;">फोटो</div>
+          </div>
+          <div class="candidate-banner-info-col">
+            <div class="candidate-banner-header">।। श्री गणेशाय नमः ।।</div>
+            <div class="candidate-banner-name">श्री रामेश्वर जाट</div>
+            <div><span class="candidate-banner-post">सरपंच प्रत्याशी</span></div>
+          </div>
+          <div class="candidate-banner-symbol-col">
+            <div class="candidate-symbol-box">
+              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#ea580c" stroke="#c2410c" stroke-width="2"/><g stroke="#f97316" stroke-width="4" stroke-linecap="round"><line x1="50" y1="12" x2="50" y2="20"/><line x1="50" y1="80" x2="50" y2="88"/><line x1="12" y1="50" x2="20" y2="50"/><line x1="80" y1="50" x2="88" y2="50"/></g><path d="M10 75 Q50 68 90 75 L90 90 L10 90 Z" fill="#0284c7"/></svg>
+            </div>
+            <div class="candidate-banner-symbol-label">चुनाव चिन्ह:<br><strong>उगता सूरज</strong></div>
+          </div>
+        </div>
+        <div class="candidate-banner-gp">ग्राम पंचायत: <strong>बूबकिया</strong> • वार्ड नं.: <strong>3</strong></div>
+        <div class="candidate-banner-time">🗓️ मतदान: <strong>15 अक्टूबर 2026</strong> | ⏰ समय: <strong>प्रातः 7:00 से 5:00 बजे तक</strong></div>
+        <div class="candidate-banner-slogan">
+          ।। समस्त ग्रामवासियों से विनम्र अपील ।।<br>अपने कर्मठ, ईमानदार एवं सेवाभावी प्रत्याशी को भारी मतों से विजयी बनावें।
+        </div>
+      </div>
+      <div class="slip-perforation-divider">
+        <span>✂️</span> <span>- - काटकर मतदाता को दें (काट कर अलग करें) - -</span> <span>✂️</span>
+      </div>
+      <div class="official-bottom-bw-slip">
+        <div class="bw-header">
+          <div class="bw-title-line"><span class="bw-title-bold">मतदाता सूचना पर्ची (VOTER SLIP)</span><span class="bw-serial-badge">सरल क्र. 2</span></div>
+          <div class="bw-sub-line">पंचायती राज चुनाव 2026 | पं.स. भिनाय (अजमेर)</div>
+        </div>
+        <div class="bw-grid">
+          <div class="bw-row"><div class="bw-cell"><strong>पं.:</strong> बूबकिया</div><div class="bw-cell"><strong>वार्ड संख्या:</strong> 1</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>मतदाता का नाम:</strong> हगामा (Hagama)</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पिता का नाम:</strong> हजारी</div></div>
+          <div class="bw-row"><div class="bw-cell"><strong>आयु/लिंग:</strong> 66 वर्ष, पुरुष</div><div class="bw-cell"><strong>मकान संख्या:</strong> 22</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पहचान पत्र क्र. (EPIC):</strong> RJ/12/101/426019</div></div>
+        </div>
+        <div class="bw-booth-box"><strong>मतदान केंद्र 26:</strong> राजकीय उच्च माध्यमिक विद्यालय कमरा नम्बर:-7 बूबकिया</div>
+      </div>
+    </div>
+
+    <!-- SLIP 3 -->
+    <div class="candidate-slip-card">
+      <div class="candidate-banner-top">
+        <div class="candidate-banner-main-row">
+          <div class="candidate-banner-photo-col">
+            <div style="width:100%; height:100%; background:#1e293b; color:#94a3b8; display:flex; align-items:center; justify-content:center; font-size:6pt;">फोटो</div>
+          </div>
+          <div class="candidate-banner-info-col">
+            <div class="candidate-banner-header">।। श्री गणेशाय नमः ।।</div>
+            <div class="candidate-banner-name">श्री रामेश्वर जाट</div>
+            <div><span class="candidate-banner-post">सरपंच प्रत्याशी</span></div>
+          </div>
+          <div class="candidate-banner-symbol-col">
+            <div class="candidate-symbol-box">
+              <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" fill="#facc15" stroke="#ca8a04" stroke-width="3"/><path d="M35 50 Q50 65 65 50" stroke="#000" stroke-width="3" fill="none"/></svg>
+            </div>
+            <div class="candidate-banner-symbol-label">चुनाव चिन्ह:<br><strong>hatho</strong></div>
+          </div>
+        </div>
+        <div class="candidate-banner-gp">ग्राम पंचायत: <strong>बूबकिया</strong> • वार्ड नं.: <strong>3</strong></div>
+        <div class="candidate-banner-time">🗓️ मतदान: <strong>15 अक्टूबर 2026</strong> | ⏰ समय: <strong>प्रातः 7:00 से 5:00 बजे तक</strong></div>
+        <div class="candidate-banner-slogan">
+          ।। समस्त ग्रामवासियों से विनम्र अपील ।।<br>अपने कर्मठ, ईमानदार एवं सेवाभावी प्रत्याशी को भारी मतों से विजयी बनावें।
+        </div>
+      </div>
+      <div class="slip-perforation-divider">
+        <span>✂️</span> <span>- - काटकर मतदाता को दें (काट कर अलग करें) - -</span> <span>✂️</span>
+      </div>
+      <div class="official-bottom-bw-slip">
+        <div class="bw-header">
+          <div class="bw-title-line"><span class="bw-title-bold">मतदाता सूचना पर्ची (VOTER SLIP)</span><span class="bw-serial-badge">सरल क्र. 4</span></div>
+          <div class="bw-sub-line">पंचायती राज चुनाव 2026 | पं.स. भिनाय (अजमेर)</div>
+        </div>
+        <div class="bw-grid">
+          <div class="bw-row"><div class="bw-cell"><strong>पं.:</strong> बूबकिया</div><div class="bw-cell"><strong>वार्ड संख्या:</strong> 1</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>मतदाता का नाम:</strong> रतनी (Ratani)</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पति का नाम:</strong> गोपाल</div></div>
+          <div class="bw-row"><div class="bw-cell"><strong>आयु/लिंग:</strong> 60 वर्ष, पुरुष</div><div class="bw-cell"><strong>मकान संख्या:</strong> 26</div></div>
+          <div class="bw-row"><div class="bw-cell full-width"><strong>पहचान पत्र क्र. (EPIC):</strong> RJ/12/101/426311</div></div>
+        </div>
+        <div class="bw-booth-box"><strong>मतदान केंद्र 26:</strong> राजकीय उच्च माध्यमिक विद्यालय कमरा नम्बर:-7 बूबकिया</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
