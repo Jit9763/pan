@@ -5795,16 +5795,22 @@ function clearCandidatePhoto() {
 
 function setSymbolMode(mode) {
   State.symbolMode = mode;
-  const standardSection = document.getElementById('standardSymbolSection');
-  const customSection = document.getElementById('customSymbolSection');
-  const btnStandard = document.getElementById('btnSymbolModeStandard');
-  const btnCustom = document.getElementById('btnSymbolModeCustom');
+  const standardSection = document.getElementById('standardSymbolControlsGroup') || document.getElementById('standardSymbolSection');
+  const customSection = document.getElementById('customSymbolNameGroup') || document.getElementById('customSymbolSection');
+  const btnStandard = document.getElementById('btnModeStandardSymbol') || document.getElementById('btnSymbolModeStandard');
+  const btnCustom = document.getElementById('btnModeCustomSymbol') || document.getElementById('btnSymbolModeCustom');
 
   if (mode === 'custom') {
     if (standardSection) standardSection.style.display = 'none';
     if (customSection) customSection.style.display = 'block';
-    if (btnStandard) btnStandard.classList.remove('active');
-    if (btnCustom) btnCustom.classList.add('active');
+    if (btnStandard) {
+      btnStandard.classList.remove('btn-primary', 'active');
+      btnStandard.classList.add('btn-outline-secondary');
+    }
+    if (btnCustom) {
+      btnCustom.classList.remove('btn-outline-secondary');
+      btnCustom.classList.add('btn-primary', 'active');
+    }
 
     const wrapper = document.getElementById('currentSymbolSvgWrapper');
     const nameText = document.getElementById('currentSymbolNameText');
@@ -5812,14 +5818,21 @@ function setSymbolMode(mode) {
     const customName = (customNameInput ? customNameInput.value : '').trim() || 'कस्टम चिन्ह';
 
     if (State.customSymbolUrl && wrapper) {
-      wrapper.innerHTML = `<img src="${State.customSymbolUrl}" alt="कस्टम चिन्ह" style="max-width:100%; max-height:100%; object-fit:contain; display:block;">`;
+      const safeSrc = State.customSymbolUrl.replace(/"/g, '&quot;');
+      wrapper.innerHTML = `<img src="${safeSrc}" alt="कस्टम चिन्ह" style="max-width:100%; max-height:100%; object-fit:contain; display:block;">`;
     }
     if (nameText) nameText.textContent = customName;
   } else {
     if (standardSection) standardSection.style.display = 'block';
     if (customSection) customSection.style.display = 'none';
-    if (btnStandard) btnStandard.classList.add('active');
-    if (btnCustom) btnCustom.classList.remove('active');
+    if (btnStandard) {
+      btnStandard.classList.remove('btn-outline-secondary');
+      btnStandard.classList.add('btn-primary', 'active');
+    }
+    if (btnCustom) {
+      btnCustom.classList.remove('btn-primary', 'active');
+      btnCustom.classList.add('btn-outline-secondary');
+    }
 
     const select = document.getElementById('candidateSymbolSelect');
     if (select && select.value) {
