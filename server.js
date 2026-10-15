@@ -284,17 +284,17 @@ function executeGithubPush(reason = 'update', callback = null) {
     const runDirectGitPush = () => {
     console.log(`[AUTO-SYNC] Running Tri-Repo clash-free Git push (pan, blo-portal, voter-portal) (Reason: ${reason})...`);
     const pcName = process.env.COMPUTERNAME || 'PC';
-    const gitPath = 'C:\Users\jiten\AppData\Local\GitHubDesktop\app-3.6.7\resources\app\git\cmd';
+    const gitDesktopCmd = 'C:/Users/jiten/AppData/Local/GitHubDesktop/app-3.6.7/resources/app/git/cmd/git.exe';
+    const gitExe = fs.existsSync(gitDesktopCmd) ? `"${gitDesktopCmd}"` : 'git';
     const commitMsg = `Auto-sync settings & users from ${pcName} (${reason}) [${new Date().toISOString()}]`;
 
-    // Tri-Repo Paths (supporting OneDrive and standard paths)
+    // Tri-Repo Paths with forward slashes to avoid escaping issues
     const candidateDirs = [
-      'C:\Users\jiten\OneDrive\Documents\GitHub\blo-portal',
-      'C:\Users\jiten\Documents\GitHub\blo-portal',
-      'C:\Users\jiten\OneDrive\Documents\GitHub\voter-portal',
-      'C:\Users\jiten\Documents\GitHub\voter-portal'
+      'C:/Users/jiten/OneDrive/Documents/GitHub/blo-portal',
+      'C:/Users/jiten/Documents/GitHub/blo-portal',
+      'C:/Users/jiten/OneDrive/Documents/GitHub/voter-portal',
+      'C:/Users/jiten/Documents/GitHub/voter-portal'
     ];
-    // Remove duplicate directories
     const seen = new Set();
     const otherRepos = candidateDirs.filter(d => {
       if (fs.existsSync(d) && !seen.has(path.resolve(d).toLowerCase())) {
@@ -323,7 +323,7 @@ function executeGithubPush(reason = 'update', callback = null) {
 
     allRepos.forEach(rDir => {
       const rName = path.basename(rDir);
-      const cmd = `"${gitPath}\git.exe" add -A && ("${gitPath}\git.exe" diff --staged --quiet || "${gitPath}\git.exe" commit -m "${commitMsg}") && "${gitPath}\git.exe" pull --rebase origin main && "${gitPath}\git.exe" push origin main`;
+      const cmd = `${gitExe} add -A && (${gitExe} diff --staged --quiet || ${gitExe} commit -m "${commitMsg}") && ${gitExe} pull --rebase origin main && ${gitExe} push origin main`;
       
       exec(cmd, { cwd: rDir }, (gErr, gStdout, gStderr) => {
         completed++;
