@@ -162,6 +162,13 @@ function exportToJson() {
 
     const rawCandidates = db.prepare('SELECT * FROM candidates').all();
     const candidates = {};
+    const pickBestCand = (existing, incoming) => {
+      if (!existing) return incoming;
+      if (incoming.custom_symbol_url && !existing.custom_symbol_url) return incoming;
+      if (existing.custom_symbol_url && !incoming.custom_symbol_url) return existing;
+      if (new Date(incoming.updated_at || 0) >= new Date(existing.updated_at || 0)) return incoming;
+      return existing;
+    };
     rawCandidates.forEach(c => {
       const candObj = {
         candidate_name: c.candidate_name,
@@ -179,12 +186,11 @@ function exportToJson() {
         show_banner_on_slip: !!c.show_banner_on_slip,
         updated_at: c.updated_at
       };
-      candidates[c.user_id] = candObj;
-      if (c.user_id.startsWith('cand_')) {
-        candidates[c.user_id.replace('cand_', '')] = candObj;
-      } else {
-        candidates['cand_' + c.user_id] = candObj;
-      }
+      const key1 = c.user_id;
+      const key2 = c.user_id.startsWith('cand_') ? c.user_id.replace('cand_', '') : ('cand_' + c.user_id);
+      candidates[key1] = pickBestCand(candidates[key1], candObj);
+      candidates[key2] = pickBestCand(candidates[key2], candObj);
+    });
     });
 
     const payload = {
@@ -782,47 +788,50 @@ const server = http.createServer(async (req, res) => {
           const c = u.candidate;
           const candId = existing ? existing.id : userId;
           const existCand = db.prepare('SELECT user_id FROM candidates WHERE user_id = ?').get(candId);
-          if (existCand) {
-            db.prepare(`
-              UPDATE candidates SET
-                candidate_name = ?, post = ?, panchayat = ?, ward = ?, symbol_name = ?, symbol_icon = ?,
-                photo_url = ?, slogan = ?, election_time = ?, mobile = ?, show_banner_on_slip = ?, updated_at = ?
-              WHERE user_id = ?
-            `).run(
-              c.candidate_name || u.full_name || '',
-              c.post || 'सरपंच',
-              c.panchayat || u.allowed_panchayats || '',
-              c.ward || u.allowed_wards || '',
-              c.symbol_name || 'उगता सूरज',
-              c.symbol_icon || 'sun',
-              c.photo_url || '',
-              c.slogan || '',
-              c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
-              c.mobile || u.mobile || '',
-              c.show_banner_on_slip ? 1 : 0,
-              new Date().toISOString(),
-              candId
-            );
-          } else {
-            db.prepare(`
-              INSERT INTO candidates (user_id, candidate_name, post, panchayat, ward, symbol_name, symbol_icon, photo_url, slogan, election_time, mobile, show_banner_on_slip, updated_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(
-              candId,
-              c.candidate_name || u.full_name || '',
-              c.post || 'सरपंच',
-              c.panchayat || u.allowed_panchayats || '',
-              c.ward || u.allowed_wards || '',
-              c.symbol_name || 'उगता सूरज',
-              c.symbol_icon || 'sun',
-              c.photo_url || '',
-              c.slogan || '',
-              c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
-              c.mobile || u.mobile || '',
-              c.show_banner_on_slip ? 1 : 0,
-              new Date().toISOString()
-            );
-          }
+      if (existCand) {
+        const customSymToSave = (c.custom_symbol_url !== undefined) ? c.custom_symbol_url : (existCand.custom_symbol_url || '');
+        db.prepare(`
+          UPDATE candidates SET
+            candidate_name = ?, post = ?, panchayat = ?, ward = ?, symbol_name = ?, symbol_icon = ?,
+            custom_symbol_url = ?, photo_url = ?, slogan = ?, election_time = ?, mobile = ?, show_banner_on_slip = ?, updated_at = ?
+          WHERE user_id = ?
+        `).run(
+          c.candidate_name || u.full_name || '',
+          c.post || 'सरपंच',
+          c.panchayat || u.allowed_panchayats || '',
+          c.ward || u.allowed_wards || '',
+          c.symbol_name || 'उगता सूरज',
+          c.symbol_icon || 'sun',
+          customSymToSave,
+          c.photo_url || '',
+          c.slogan || '',
+          c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
+          c.mobile || u.mobile || '',
+          c.show_banner_on_slip ? 1 : 0,
+          new Date().toISOString(),
+          candId
+        );
+      } else {
+        db.prepare(`
+          INSERT INTO candidates (user_id, candidate_name, post, panchayat, ward, symbol_name, symbol_icon, custom_symbol_url, photo_url, slogan, election_time, mobile, show_banner_on_slip, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          candId,
+          c.candidate_name || u.full_name || '',
+          c.post || 'सरपंच',
+          c.panchayat || u.allowed_panchayats || '',
+          c.ward || u.allowed_wards || '',
+          c.symbol_name || 'उगता सूरज',
+          c.symbol_icon || 'sun',
+          c.custom_symbol_url || '',
+          c.photo_url || '',
+          c.slogan || '',
+          c.election_time || 'प्रातः 7:00 बजे से सायं 5:00 बजे तक',
+          c.mobile || u.mobile || '',
+          c.show_banner_on_slip ? 1 : 0,
+          new Date().toISOString()
+        );
+      }
         }
 
         exportToJson();
