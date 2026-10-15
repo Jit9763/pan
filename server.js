@@ -163,7 +163,7 @@ function exportToJson() {
     const rawCandidates = db.prepare('SELECT * FROM candidates').all();
     const candidates = {};
     rawCandidates.forEach(c => {
-      candidates[c.user_id] = {
+      const candObj = {
         candidate_name: c.candidate_name,
         post: c.post,
         panchayat: c.panchayat,
@@ -179,6 +179,12 @@ function exportToJson() {
         show_banner_on_slip: !!c.show_banner_on_slip,
         updated_at: c.updated_at
       };
+      candidates[c.user_id] = candObj;
+      if (c.user_id.startsWith('cand_')) {
+        candidates[c.user_id.replace('cand_', '')] = candObj;
+      } else {
+        candidates['cand_' + c.user_id] = candObj;
+      }
     });
 
     const payload = {
@@ -844,11 +850,13 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // Get / Save Candidate Profile
+    // Get / Save Candidate Profile (with bi-directional alias support: cand_xxx <-> xxx)
     if (pathname.startsWith('/api/candidate/')) {
       const uId = decodeURIComponent(pathname.replace('/api/candidate/', ''));
+      const altId = uId.startsWith('cand_') ? uId.replace('cand_', '') : ('cand_' + uId);
+
       if (req.method === 'GET') {
-        const cand = db.prepare('SELECT * FROM candidates WHERE user_id = ?').get(uId) || null;
+        const cand = db.prepare('SELECT * FROM candidates WHERE user_id = ? OR user_id = ?').get(uId, altId) || null;
         res.end(JSON.stringify({ success: true, candidate: cand }));
         return;
       }
@@ -856,7 +864,9 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'POST') {
         try {
           const c = await parseJsonBody(req);
-          const existing = db.prepare('SELECT user_id FROM candidates WHERE user_id = ?').get(uId);
+          const existing = db.prepare('SELECT user_id FROM candidates WHERE user_id = ? OR user_id = ?').get(uId, altId);
+          const targetId = existing ? existing.user_id : uId;
+
           if (existing) {
             db.prepare(`
               UPDATE candidates SET
@@ -878,14 +888,14 @@ const server = http.createServer(async (req, res) => {
               c.mobile || '',
               c.show_banner_on_slip ? 1 : 0,
               new Date().toISOString(),
-              uId
+              targetId
             );
           } else {
             db.prepare(`
               INSERT INTO candidates (user_id, candidate_name, post, panchayat, ward, symbol_name, symbol_icon, custom_symbol_url, photo_url, slogan, election_date, election_time, mobile, show_banner_on_slip, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(
-              uId,
+              targetId,
               c.candidate_name || '',
               c.post || 'सरपंच',
               c.panchayat || '',
@@ -979,6 +989,36 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(500);
     res.end('Server Error: ' + e.message);
   }
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`⚠️ Port ${PORT} already in use. Cleaning up lingering process on port ${PORT}...`);
+    try {
+      const { execSync } = require('node:child_process');
+      const out = execSync(`netstat -ano | findstr :${PORT} | findstr LISTENING`, { encoding: 'utf8' });
+      const lines = out.trim().split('\n');
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== '0' && pid !== String(process.pid)) {
+          try { execSync(`taskkill /F /PID ${pid}`); } catch(_) {}
+        }
+      }
+      setTimeout(() => {
+        server.listen(PORT, () => {
+          console.log(`🚀 Panchayat Chunav 2026 High-Speed Node & SQLite Server is LIVE on port ${PORT}!`);
+          console.log(`📁 Local DB: ${DB_PATH}`);
+          console.log(`🌐 URL: http://localhost:${PORT}`);
+        });
+      }, 800);
+      return;
+    } catch(e) {
+      console.error(`Could not auto-kill port ${PORT}:`, e.message);
+    }
+  }
+  console.error('Server error:', err);
+  process.exit(1);
 });
 
 server.listen(PORT, () => {

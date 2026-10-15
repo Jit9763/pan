@@ -65,7 +65,10 @@ echo.
 
 :: 4. Clean lingering process on Port 3000 (IPv4 & IPv6 robust cleanup)
 echo [2/3] Preparing Port 3000...
-powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+for /f "tokens=5" %%p in ('netstat -aon ^| findstr /r ":3000\>" ^| findstr "LISTENING"') do (
+    if not "%%p"=="0" taskkill /F /PID %%p >nul 2>&1
+)
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | ForEach-Object { if ($_.OwningProcess -gt 0) { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } }" >nul 2>&1
 timeout /t 1 /nobreak >nul 2>&1
 
 :: 5. Open browser after brief pause
@@ -86,6 +89,9 @@ node --experimental-sqlite server.js
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo [SERVER STOPPED] Kuch gadbad hui ya server stop hua.
+    echo =========================================================================
+    echo [SERVER STOPPED] Server restart karne ke liye koi bhi key dabayein...
+    echo =========================================================================
     pause
+    goto DIR_FOUND
 )
