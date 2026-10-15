@@ -284,37 +284,46 @@ function executeGithubPush(reason = 'update', callback = null) {
     const runDirectGitPush = () => {
     console.log(`[AUTO-SYNC] Running Tri-Repo clash-free Git push (pan, blo-portal, voter-portal) (Reason: ${reason})...`);
     const pcName = process.env.COMPUTERNAME || 'PC';
-    const gitPath = 'C:\\Users\\jiten\\AppData\\Local\\GitHubDesktop\\app-3.6.7\\resources\\app\\git\\cmd';
+    const gitPath = 'C:\Users\jiten\AppData\Local\GitHubDesktop\app-3.6.7\resources\app\git\cmd';
     const commitMsg = `Auto-sync settings & users from ${pcName} (${reason}) [${new Date().toISOString()}]`;
 
-    // Tri-Repo Paths
-    const otherRepos = [
-      'C:\\Users\\jiten\\Documents\\GitHub\\blo-portal',
-      'C:\\Users\\jiten\\Documents\\GitHub\\voter-portal'
+    // Tri-Repo Paths (supporting OneDrive and standard paths)
+    const candidateDirs = [
+      'C:\Users\jiten\OneDrive\Documents\GitHub\blo-portal',
+      'C:\Users\jiten\Documents\GitHub\blo-portal',
+      'C:\Users\jiten\OneDrive\Documents\GitHub\voter-portal',
+      'C:\Users\jiten\Documents\GitHub\voter-portal'
     ];
+    // Remove duplicate directories
+    const seen = new Set();
+    const otherRepos = candidateDirs.filter(d => {
+      if (fs.existsSync(d) && !seen.has(path.resolve(d).toLowerCase())) {
+        seen.add(path.resolve(d).toLowerCase());
+        return true;
+      }
+      return false;
+    });
 
     const syncFiles = ['portal_users.json', 'portal_settings.json', 'app.js', 'index.html', 'styles.css'];
 
     // 1. Copy updated files to blo-portal and voter-portal
     otherRepos.forEach(rDir => {
-      if (fs.existsSync(rDir)) {
-        syncFiles.forEach(f => {
-          const s = path.join(__dirname, f);
-          const d = path.join(rDir, f);
-          if (fs.existsSync(s)) {
-            try { fs.copyFileSync(s, d); } catch(_) {}
-          }
-        });
-      }
+      syncFiles.forEach(f => {
+        const s = path.join(__dirname, f);
+        const d = path.join(rDir, f);
+        if (fs.existsSync(s)) {
+          try { fs.copyFileSync(s, d); } catch(_) {}
+        }
+      });
     });
 
-    // 2. Commit and push on all 3 repositories without clash
-    const allRepos = [__dirname, ...otherRepos.filter(d => fs.existsSync(d))];
+    // 2. Commit and push on all repositories without clash using git add -A
+    const allRepos = [__dirname, ...otherRepos];
     let completed = 0;
 
     allRepos.forEach(rDir => {
       const rName = path.basename(rDir);
-      const cmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json app.js index.html styles.css && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
+      const cmd = `"${gitPath}\git.exe" add -A && ("${gitPath}\git.exe" diff --staged --quiet || "${gitPath}\git.exe" commit -m "${commitMsg}") && "${gitPath}\git.exe" pull --rebase origin main && "${gitPath}\git.exe" push origin main`;
       
       exec(cmd, { cwd: rDir }, (gErr, gStdout, gStderr) => {
         completed++;
