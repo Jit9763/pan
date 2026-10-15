@@ -293,7 +293,7 @@ function executeGithubPush(reason = 'update', callback = null) {
       'C:\\Users\\jiten\\Documents\\GitHub\\voter-portal'
     ];
 
-    const syncFiles = ['portal_users.json', 'portal_settings.json', 'app.js'];
+    const syncFiles = ['portal_users.json', 'portal_settings.json', 'app.js', 'index.html', 'styles.css'];
 
     // 1. Copy updated files to blo-portal and voter-portal
     otherRepos.forEach(rDir => {
@@ -314,7 +314,7 @@ function executeGithubPush(reason = 'update', callback = null) {
 
     allRepos.forEach(rDir => {
       const rName = path.basename(rDir);
-      const cmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json app.js index.html && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
+      const cmd = `"${gitPath}\\git.exe" add portal_settings.json portal_users.json app.js index.html styles.css && ("${gitPath}\\git.exe" diff --staged --quiet || "${gitPath}\\git.exe" commit -m "${commitMsg}") && "${gitPath}\\git.exe" pull --rebase origin main && "${gitPath}\\git.exe" push origin main`;
       
       exec(cmd, { cwd: rDir }, (gErr, gStdout, gStderr) => {
         completed++;
@@ -666,10 +666,10 @@ const server = http.createServer(async (req, res) => {
 
         const merged = users.map(u => ({
           ...u,
-          candidate: candMap[u.id] || null
+          candidate: candMap[u.id] || candMap[u.username] || null
         }));
 
-        res.end(JSON.stringify({ success: true, users: merged }));
+        res.end(JSON.stringify({ success: true, users: merged, candidates: candMap }));
       } catch (err) {
         res.writeHead(500);
         res.end(JSON.stringify({ success: false, error: err.message }));
