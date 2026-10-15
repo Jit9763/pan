@@ -3719,7 +3719,12 @@ function renderModalCandidateSlip(voter) {
       let modalSymbolSvg = '';
 
       if (customUrl) {
-        modalSymbolSvg = `<img src="${customUrl}" alt="${cand.symbol_name || 'चुनाव चिन्ह'}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+        if (customUrl.trim().startsWith('<svg')) {
+          modalSymbolSvg = customUrl;
+        } else {
+          const safeSrc = customUrl.replace(/"/g, '&quot;');
+          modalSymbolSvg = `<img src="${safeSrc}" alt="${cand.symbol_name || 'चुनाव चिन्ह'}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+        }
       } else {
         const symObj = symbols.find(s => s.id === cand.symbol_icon || (cand.symbol_name && s.name_hi.includes(cand.symbol_name))) || symbols[0];
         modalSymbolSvg = symObj ? symObj.svg : '';
@@ -6003,7 +6008,12 @@ function renderLiveSpecimenSlip() {
   if (State.symbolMode === 'custom' && State.customSymbolUrl) {
     customSymbolUrl = State.customSymbolUrl;
     symbolName = (document.getElementById('candidateCustomSymbolNameInput')?.value || '').trim() || 'कस्टम चिन्ह';
-    symbolSvg = `<img src="${customSymbolUrl}" alt="${symbolName}" class="candidate-custom-symbol-img" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:0 auto;">`;
+    if (customSymbolUrl.trim().startsWith('<svg')) {
+      symbolSvg = customSymbolUrl;
+    } else {
+      const safeSrc = customSymbolUrl.replace(/"/g, '&quot;');
+      symbolSvg = `<img src="${safeSrc}" alt="${symbolName}" class="candidate-custom-symbol-img" style="max-width:100%; max-height:100%; object-fit:contain; display:block; margin:0 auto;">`;
+    }
   } else {
     const symbolSelect = document.getElementById('candidateSymbolSelect');
     const symbolId = symbolSelect ? symbolSelect.value : 'sun';
@@ -6072,7 +6082,12 @@ function buildDetachableCandidateSlipHtml(voter, candidateData) {
   const cCustomSymbolUrl = candidateData.custom_symbol_url || candidateData.custom_symbol || candidateData.symbol_url;
   let cSymbolSvg = candidateData.symbol_svg;
   if (cCustomSymbolUrl) {
-    cSymbolSvg = `<img src="${cCustomSymbolUrl}" alt="${cSymbolName}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+    if (cCustomSymbolUrl.trim().startsWith('<svg')) {
+      cSymbolSvg = cCustomSymbolUrl;
+    } else {
+      const safeSrc = cCustomSymbolUrl.replace(/"/g, '&quot;');
+      cSymbolSvg = `<img src="${safeSrc}" alt="${cSymbolName}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+    }
   } else if (!cSymbolSvg) {
     cSymbolSvg = (window.OFFICIAL_ELECTION_SYMBOLS && window.OFFICIAL_ELECTION_SYMBOLS[0].svg);
   }
@@ -6243,7 +6258,12 @@ window.buildOfficialSlipHtml = function(voter, layout, theme) {
       let candSymbolSvg = '';
 
       if (customUrl) {
-        candSymbolSvg = `<img src="${customUrl}" alt="${cand.symbol_name || 'चुनाव चिन्ह'}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+        if (customUrl.trim().startsWith('<svg')) {
+          candSymbolSvg = customUrl;
+        } else {
+          const safeSrc = customUrl.replace(/"/g, '&quot;');
+          candSymbolSvg = `<img src="${safeSrc}" alt="${cand.symbol_name || 'चुनाव चिन्ह'}" class="candidate-custom-symbol-img" style="max-width:44px; max-height:44px; width:auto; height:auto; object-fit:contain; display:block; margin:0 auto;" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/identicon/svg?seed=symbol';">`;
+        }
       } else {
         const symObj = symbols.find(s => s.id === cand.symbol_icon || (cand.symbol_name && s.name_hi.includes(cand.symbol_name))) || symbols[0];
         candSymbolSvg = (symObj && symObj.svg) ? symObj.svg : (cand.symbol_svg || '');
