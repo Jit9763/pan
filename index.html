@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <script>window.PORTAL_TYPE = "pan"; window.PORTAL_DEPLOY_VERSION = "20261018_034126";</script>
+    <script>window.PORTAL_TYPE = "pan"; window.PORTAL_DEPLOY_VERSION = "20261018_040519";</script>
   <script>
     // Instant Session Persistence: Prevent login screen flicker on refresh
     (function() {
@@ -69,7 +69,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tiro+Devanagari+Hindi:ital@0;1&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261018_034126">
+  <link rel="stylesheet" href="styles.css?v=20261018_040519">
 </head>
 <body>
 
@@ -169,6 +169,7 @@
         <div class="topbar-left">
           <span class="flag-icon">🇮🇳</span>
           <span>पंचायती राज आम चुनाव - 2026 | पंचायत समिति: भिनाय (अजमेर)</span>
+          <span class="topbar-date-tag" style="background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:700; font-size:0.82rem; color:#fef08a;">📅 मतदान: <span id="topbarElectionDateText">15 अक्टूबर 2026</span></span>
         </div>
                 <div class="topbar-right" id="userSessionInfo" style="display:flex; align-items:center; gap:8px;">
           <span class="status-dot"></span>
@@ -983,7 +984,7 @@
                 </div>
                 <div class="form-group">
                   <label for="candidateElectionTimeInput"><strong>⏰ मतदान का समय (Voting Time) *:</strong></label>
-                  <input type="text" id="candidateElectionTimeInput" class="form-input" value="प्रातः 7:00 बजे से सायं 5:00 बजे तक" placeholder="उदा. प्रातः 7:00 बजे से सायं 5:00 बजे तक" oninput="renderLiveSpecimenSlip()" style="font-weight:700;">
+                  <input type="text" id="candidateElectionTimeInput" class="form-input" value="प्रातः 7:00 बजे से सायं 6:00 बजे तक" placeholder="उदा. प्रातः 7:00 बजे से सायं 6:00 बजे तक" oninput="renderLiveSpecimenSlip()" style="font-weight:700;">
                 </div>
               </div>
 
@@ -1109,6 +1110,26 @@
                   <label style="cursor:pointer;"><input type="checkbox" id="chkModAlpha" checked onchange="savePortalModuleSettings()"> अ-ज्ञ सूची</label>
                   <label style="cursor:pointer;"><input type="checkbox" id="chkModSlips" checked onchange="savePortalModuleSettings()"> पर्ची प्रिंट</label>
                   <label style="cursor:pointer;"><input type="checkbox" id="chkModCandidate" checked onchange="savePortalModuleSettings()"> प्रत्याशी संपादन</label>
+                </div>
+
+                <!-- 📅 सुपर एडमिन: वोटर पोर्टल चुनाव दिनांक व समय नियंत्रण -->
+                <div class="mt-2 pt-2" style="border-top:1px dashed #bbf7d0;">
+                  <label style="font-size:0.82rem; font-weight:700; color:#065f46; display:flex; align-items:center; gap:5px; margin-bottom:4px;">
+                    <span>📅 वोटर पोर्टल मतदान दिनांक (Election Date):</span>
+                  </label>
+                  <div class="d-flex gap-2 align-items-center mb-1">
+                    <input type="text" id="voterPortalElectionDateInput" class="form-input form-input-sm" placeholder="उदा. 15 अक्टूबर 2026" style="flex:1; font-weight:700; background:#ffffff; border:1.5px solid #10b981; padding:5px 8px; border-radius:6px; font-size:0.85rem;" value="15 अक्टूबर 2026">
+                    <button type="button" class="btn btn-xs btn-success" onclick="saveVoterPortalElectionDate()" style="font-weight:700; padding:6px 12px; white-space:nowrap; border-radius:6px; box-shadow:0 1px 3px rgba(16,185,129,0.3); background:#10b981; border:none; color:#fff; cursor:pointer;">
+                      💾 दिनांक लागू करें
+                    </button>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span style="font-size:0.75rem; color:#047857; font-weight:600; white-space:nowrap;">⏰ मतदान समय:</span>
+                    <input type="text" id="voterPortalElectionTimeInput" class="form-input form-input-sm" placeholder="उदा. प्रातः 7:00 बजे से सायं 6:00 बजे तक" style="flex:1; font-size:0.76rem; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px; background:#fff;" value="प्रातः 7:00 बजे से सायं 6:00 बजे तक" onchange="saveVoterPortalElectionDate()">
+                  </div>
+                  <div style="font-size:0.72rem; color:#059669; margin-top:4px; line-height:1.3;">
+                    ⚡ सुपर एडमिन द्वारा सेट दिनांक तुरंत पब्लिक वोटर पोर्टल एवं सभी पर्चियों पर लागू हो जाएगी।
+                  </div>
                 </div>
               </div>
 
@@ -1776,8 +1797,13 @@
         </div>
 
         <div class="form-group mt-3">
+          <label for="adminCandElectionDate"><strong>📅 मतदान दिनांक (Election Date) *:</strong></label>
+          <input type="text" id="adminCandElectionDate" class="form-input" placeholder="उदा. 15 अक्टूबर 2026" value="15 अक्टूबर 2026" style="font-weight:600;">
+        </div>
+
+        <div class="form-group mt-2">
           <label for="adminCandElectionTime"><strong>⏰ मतदान का समय (Voting Time) *:</strong></label>
-          <input type="text" id="adminCandElectionTime" class="form-input" value="प्रातः 7:00 बजे से सायं 5:00 बजे तक" placeholder="उदा. प्रातः 7:00 बजे से सायं 5:00 बजे तक" style="font-weight:600;">
+          <input type="text" id="adminCandElectionTime" class="form-input" value="प्रातः 7:00 बजे से सायं 6:00 बजे तक" placeholder="उदा. प्रातः 7:00 बजे से सायं 6:00 बजे तक" style="font-weight:600;">
         </div>
 
         <div class="form-group mt-2">
@@ -1960,10 +1986,10 @@
   <div id="toastContainer" class="toast-container no-print"></div>
 
   <!-- Scripts -->
-    <script src="symbols_master.js?v=20261018_034126"></script>
-  <script src="master_directory.js?v=20261018_034126"></script>
+    <script src="symbols_master.js?v=20261018_040519"></script>
+  <script src="master_directory.js?v=20261018_040519"></script>
   <script src="master_data.js?v=1791547927"></script>
-  <script src="app.js?v=20261018_034126"></script>
+  <script src="app.js?v=20261018_040519"></script>
 
   <!-- Super Admin: Add New User Modal -->
   <div id="addUserModal" class="modal-overlay no-print" style="display:none;" onclick="if(event.target===this) closeAddUserModal()">
