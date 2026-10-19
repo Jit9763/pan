@@ -31,5 +31,13 @@
     "url": "https://jit9763.github.io/pan/",
     "status": "ACTIVE",
     "last_sync": "2026-10-05 23:35"
+  },
+  "google_sheet_sync": {
+    "enabled": true,
+    "apps_script_url": "https://script.google.com/macros/s/AKfycbzhZ-VdcGJ_nUuG40vm-MyMNJEnLfTgk3kBqyhi1OIefCgW9Smw0XweLTUd7D6o710lpA/exec",
+    "sheet_name": "Candidates",
+    "sync_interval_ms": 3600000,
+    "sync_interval_desc": "1 Hour (60 minutes)",
+    "last_sync": null
   }
 }
